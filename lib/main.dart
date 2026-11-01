@@ -1,13 +1,40 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 2. Wait for Firebase initialization
+  // 1. Wait for Firebase initialization
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // 2. Initialize Supabase using the Firebase user's ID token.
+  const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+  const supabaseKey = String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY');
+
+  if (supabaseUrl.isEmpty || supabaseKey.isEmpty) {
+    throw StateError(
+      'Missing Supabase configuration. '
+      'Run with --dart-define-from-file=env/dev.json',
+    );
+  }
+
+  await Supabase.initialize(
+    url: supabaseUrl,
+    publishableKey: supabaseKey,
+    accessToken: () async {
+      final user = FirebaseAuth.instance.currentUser;
+
+      if (user == null) {
+        return null;
+      }
+
+      return await user.getIdToken();
+    },
+  );
 
   runApp(MyApp());
 }
