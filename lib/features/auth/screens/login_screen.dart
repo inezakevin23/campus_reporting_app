@@ -1,5 +1,6 @@
 import 'package:campus_reporting_app/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -52,14 +53,12 @@ class LoginScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
                 // Temporary navigation for UI testing.
-                // Real Firebase login comes in Phase 2.
+                // Real Firebase login comes later.
                 FilledButton(
                   onPressed: () => context.go('/student'),
                   child: const Text('Preview Student Dashboard'),
                 ),
-
                 const SizedBox(height: 12),
-
                 OutlinedButton(
                   onPressed: () => context.go('/staff'),
                   style: OutlinedButton.styleFrom(
@@ -67,9 +66,7 @@ class LoginScreen extends StatelessWidget {
                   ),
                   child: const Text('Preview Staff Dashboard'),
                 ),
-
                 const SizedBox(height: 20),
-
                 TextButton(
                   onPressed: () => context.go('/register'),
                   child: const Text("Don't have an account? Register"),
