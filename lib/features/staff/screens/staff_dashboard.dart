@@ -1,6 +1,5 @@
 import 'package:campus_reporting_app/features/auth/providers/auth_provider.dart';
-import 'package:campus_reporting_app/features/incidents/widgets/incident_card.dart';
-import 'package:campus_reporting_app/features/incidents/widgets/summary_card.dart';
+import 'package:campus_reporting_app/features/incidents/widgets/incident_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';

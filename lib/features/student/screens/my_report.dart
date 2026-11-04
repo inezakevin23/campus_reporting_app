@@ -1,4 +1,4 @@
-import 'package:campus_reporting_app/features/incidents/widgets/incident_card.dart';
+import 'package:campus_reporting_app/features/incidents/widgets/incident_widget.dart';
 import 'package:campus_reporting_app/features/student/widgets/navigationbar.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';

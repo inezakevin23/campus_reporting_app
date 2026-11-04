@@ -1,9 +1,13 @@
 import 'dart:typed_data';
 
+import 'package:firebase_auth/firebase_auth.dart';
+
+import '../../../data/models/incident_model.dart';
+import '../../../data/models/incident_status_update_model.dart';
+
 import 'package:campus_reporting_app/data/services/incident_service.dart';
 import 'package:campus_reporting_app/data/services/storage_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -75,3 +79,34 @@ final createIncidentProvider =
     AsyncNotifierProvider<CreateIncidentController, void>(
       CreateIncidentController.new,
     );
+
+final campusIncidentsProvider = StreamProvider<List<Incident>>((ref) {
+  return ref.watch(incidentServiceProvider).watchCampusIncidents();
+});
+
+final myReportsProvider = StreamProvider.family<List<Incident>, String>((
+  ref,
+  uid,
+) {
+  return ref.watch(incidentServiceProvider).watchMyReports(uid);
+});
+
+final incidentDetailsProvider = StreamProvider.family<Incident?, String>((
+  ref,
+  incidentId,
+) {
+  return ref.watch(incidentServiceProvider).watchIncident(incidentId);
+});
+
+final incidentHistoryProvider =
+    StreamProvider.family<List<IncidentStatusUpdate>, String>((
+      ref,
+      incidentId,
+    ) {
+      return ref.watch(incidentServiceProvider).watchStatusHistory(incidentId);
+    });
+
+final signedImageUrlProvider = FutureProvider.autoDispose
+    .family<String, String>((ref, imagePath) async {
+      return ref.watch(storageServiceProvider).getSignedImageUrl(imagePath);
+    });

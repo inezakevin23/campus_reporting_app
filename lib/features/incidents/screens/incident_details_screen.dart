@@ -1,8 +1,11 @@
-import 'package:campus_reporting_app/core/theme/app_theme.dart';
-import 'package:campus_reporting_app/features/incidents/widgets/status_chip.dart';
+import 'package:campus_reporting_app/features/incidents/providers/incident_provider.dart';
+import 'package:campus_reporting_app/features/incidents/widgets/incident_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class IncidentDetailsScreen extends StatelessWidget {
+import '../../../core/theme/app_theme.dart';
+
+class IncidentDetailsScreen extends ConsumerWidget {
   final String incidentId;
   final bool isStaff;
 
@@ -13,104 +16,378 @@ class IncidentDetailsScreen extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Incident Details')),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final incidentAsync = ref.watch(incidentDetailsProvider(incidentId));
 
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          Container(
-            height: 180,
-            decoration: BoxDecoration(
-              color: AppTheme.card,
-              borderRadius: BorderRadius.circular(14),
+    final historyAsync = ref.watch(incidentHistoryProvider(incidentId));
+
+    return incidentAsync.when(
+      // LOADING
+      loading: () {
+        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      },
+
+      // ERROR
+      error: (error, stackTrace) {
+        return Scaffold(
+          appBar: AppBar(title: const Text('Incident Details')),
+
+          body: const Center(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+
+              child: Text(
+                'Unable to retrieve incident details. '
+                'Please check your connection and try again.',
+                textAlign: TextAlign.center,
+              ),
             ),
-            child: const Icon(
-              Icons.image_outlined,
-              size: 60,
-              color: Colors.white54,
+          ),
+        );
+      },
+
+      // INCIDENT DATA
+      data: (incident) {
+        if (incident == null) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Incident Details')),
+
+            body: const EmptyIncidentsWidget(
+              message: 'This incident could not be found.',
             ),
-          ),
+          );
+        }
 
-          const SizedBox(height: 20),
+        return Scaffold(
+          appBar: AppBar(title: const Text('Incident Details')),
 
-          Text(
-            'Water shortage',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
+          body: ListView(
+            padding: const EdgeInsets.all(16),
 
-          const SizedBox(height: 8),
+            children: [
+              // IMAGE
+              if (incident.imagePath != null)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
 
-          Text('Incident ID: $incidentId'),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 220,
 
-          const SizedBox(height: 12),
-
-          const StatusChip(status: 'In Progress'),
-
-          const SizedBox(height: 24),
-
-          const Text(
-            'Description',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-
-          const SizedBox(height: 8),
-
-          const Text(
-            'There has been no water supply in the student residence '
-            'since this morning. The issue is affecting students '
-            'living in Block A.',
-          ),
-
-          const SizedBox(height: 24),
-
-          const Text(
-            'Status Timeline',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-
-          const SizedBox(height: 12),
-
-          const ListTile(
-            leading: Icon(Icons.check_circle, color: Colors.green),
-            title: Text('Submitted'),
-            subtitle: Text('Incident received'),
-          ),
-
-          const ListTile(
-            leading: Icon(Icons.timelapse, color: AppTheme.yellow),
-            title: Text('In Progress'),
-            subtitle: Text('Maintenance team notified'),
-          ),
-
-          const ListTile(
-            leading: Icon(Icons.circle_outlined, color: Colors.white38),
-            title: Text('Resolved'),
-            subtitle: Text('Pending'),
-          ),
-
-          if (isStaff) ...[
-            const SizedBox(height: 24),
-
-            const Text(
-              'Staff Actions',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-
-            FilledButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Status updates will be connected in Phase 5.',
-                    ),
+                    child: PrivateIncidentImage(imagePath: incident.imagePath!),
                   ),
-                );
-              },
-              child: const Text('Update Incident Status'),
+                )
+              else
+                Container(
+                  width: double.infinity,
+                  height: 170,
+
+                  decoration: BoxDecoration(
+                    color: AppTheme.card,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+
+                  child: const Icon(
+                    Icons.image_outlined,
+                    size: 55,
+                    color: Colors.white38,
+                  ),
+                ),
+
+              const SizedBox(height: 20),
+
+              // TITLE AND STATUS
+              Text(
+                incident.title,
+
+                style: Theme.of(context).textTheme.headlineSmall
+                    ?.copyWith(fontWeight: FontWeight.bold),
+              ),
+
+              const SizedBox(height: 12),
+
+              Row(
+                children: [
+                  IncidentStatusChip(status: incident.status),
+
+                  const SizedBox(width: 8),
+
+                  Text(
+                    'ID: ${incident.id}',
+                    style: const TextStyle(fontSize: 11, color: Colors.white54),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 24),
+
+              // INCIDENT INFORMATION
+              _SectionTitle(title: 'Incident Information'),
+
+              const SizedBox(height: 12),
+
+              _InformationRow(
+                icon: Icons.category_outlined,
+                label: 'Category',
+                value: formatIncidentLabel(incident.category),
+              ),
+
+              _InformationRow(
+                icon: Icons.flag_outlined,
+                label: 'Priority',
+                value: formatIncidentLabel(incident.priority),
+              ),
+
+              _InformationRow(
+                icon: Icons.location_on_outlined,
+                label: 'Location',
+                value: incident.location,
+              ),
+
+              _InformationRow(
+                icon: Icons.calendar_today_outlined,
+                label: 'Submitted',
+                value: formatIncidentDate(incident.createdAt),
+              ),
+
+              const SizedBox(height: 24),
+
+              // DESCRIPTION
+              _SectionTitle(title: 'Description'),
+
+              const SizedBox(height: 10),
+
+              Container(
+                padding: const EdgeInsets.all(16),
+
+                decoration: BoxDecoration(
+                  color: AppTheme.card,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+
+                child: Text(
+                  incident.description,
+                  style: const TextStyle(color: Colors.white70, height: 1.6),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // STATUS TIMELINE
+              _SectionTitle(title: 'Status Timeline'),
+
+              const SizedBox(height: 12),
+
+              historyAsync.when(
+                loading: () {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                },
+
+                error: (error, stackTrace) {
+                  return const Text(
+                    'Unable to load status history.',
+                    style: TextStyle(color: Colors.redAccent),
+                  );
+                },
+
+                data: (history) {
+                  if (history.isEmpty) {
+                    return const EmptyIncidentsWidget(
+                      message: 'No status updates available.',
+                    );
+                  }
+
+                  return Column(
+                    children: history.map((update) {
+                      return _TimelineItem(
+                        status: update.status,
+                        note: update.note,
+                        date: update.createdAt,
+                        isLast: update.id == history.last.id,
+                      );
+                    }).toList(),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 24),
+
+              // STAFF PLACEHOLDER
+              if (isStaff)
+                Container(
+                  padding: const EdgeInsets.all(16),
+
+                  decoration: BoxDecoration(
+                    color: AppTheme.card,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+
+                  child: const Text(
+                    'This incident is available for staff review. '
+                    'Status updating will be implemented in Phase 5.',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+// SECTION TITLE
+class _SectionTitle extends StatelessWidget {
+  final String title;
+
+  const _SectionTitle({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      title,
+      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    );
+  }
+}
+
+// INFORMATION ROW
+class _InformationRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _InformationRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+
+      child: Row(
+        children: [
+          Icon(icon, color: AppTheme.yellow, size: 20),
+
+          const SizedBox(width: 12),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(color: Colors.white54, fontSize: 12),
+                ),
+
+                const SizedBox(height: 3),
+
+                Text(
+                  value,
+                  style: const TextStyle(fontWeight: FontWeight.w500),
+                ),
+              ],
             ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// STATUS TIMELINE ITEM
+class _TimelineItem extends StatelessWidget {
+  final String status;
+  final String note;
+  final DateTime? date;
+  final bool isLast;
+
+  const _TimelineItem({
+    required this.status,
+    required this.note,
+    required this.date,
+    required this.isLast,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isResolved = status == 'resolved';
+    final isInProgress = status == 'in_progress';
+
+    final color = isResolved
+        ? Colors.green
+        : isInProgress
+        ? AppTheme.yellow
+        : Colors.blue;
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+
+        children: [
+          // Timeline indicator and connecting line
+          SizedBox(
+            width: 30,
+
+            child: Column(
+              children: [
+                Icon(
+                  isResolved
+                      ? Icons.check_circle
+                      : isInProgress
+                      ? Icons.timelapse
+                      : Icons.radio_button_checked,
+
+                  color: color,
+                  size: 20,
+                ),
+
+                if (!isLast)
+                  Expanded(child: Container(width: 2, color: Colors.white24)),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: 10),
+
+          // Timeline information
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 24),
+
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+
+                children: [
+                  Text(
+                    formatIncidentLabel(status),
+
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+
+                  const SizedBox(height: 5),
+
+                  Text(note, style: const TextStyle(color: Colors.white70)),
+
+                  const SizedBox(height: 5),
+
+                  Text(
+                    formatIncidentDate(date),
+                    style: const TextStyle(color: Colors.white54, fontSize: 11),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );

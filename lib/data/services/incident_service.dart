@@ -1,5 +1,8 @@
 import 'dart:typed_data';
 
+import '../models/incident_model.dart';
+import '../models/incident_status_update_model.dart';
+
 import 'package:campus_reporting_app/data/services/storage_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -99,5 +102,72 @@ class IncidentService {
 
       rethrow;
     }
+  }
+  // Listen to all campus incidents.
+
+  Stream<List<Incident>> watchCampusIncidents() {
+    return _firestore
+        .collection('incidents')
+        .orderBy('createdAt', descending: true)
+        .limit(100)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs.map((doc) {
+            return Incident.fromMap(doc.id, doc.data());
+          }).toList();
+        });
+  }
+  // Listen to reports belonging to a specific student.
+
+  Stream<List<Incident>> watchMyReports(String uid) {
+    return _firestore
+        .collection('incidents')
+        .where('reporterId', isEqualTo: uid)
+        .limit(100)
+        .snapshots()
+        .map((snapshot) {
+          final incidents = snapshot.docs.map((doc) {
+            return Incident.fromMap(doc.id, doc.data());
+          }).toList();
+
+          // Sort the reports by submission date.
+          incidents.sort((a, b) {
+            final dateA = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+
+            final dateB = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+
+            return dateB.compareTo(dateA);
+          });
+
+          return incidents;
+        });
+  }
+  // Listen to one specific incident.
+
+  Stream<Incident?> watchIncident(String incidentId) {
+    return _firestore.collection('incidents').doc(incidentId).snapshots().map((
+      document,
+    ) {
+      if (!document.exists) {
+        return null;
+      }
+
+      return Incident.fromMap(document.id, document.data()!);
+    });
+  }
+  // Listen to the status history of an incident.
+
+  Stream<List<IncidentStatusUpdate>> watchStatusHistory(String incidentId) {
+    return _firestore
+        .collection('incidents')
+        .doc(incidentId)
+        .collection('statusHistory')
+        .orderBy('createdAt', descending: false)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs.map((doc) {
+            return IncidentStatusUpdate.fromMap(doc.id, doc.data());
+          }).toList();
+        });
   }
 }

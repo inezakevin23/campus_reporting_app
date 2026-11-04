@@ -1,7 +1,7 @@
 import 'package:campus_reporting_app/core/theme/app_theme.dart';
 import 'package:campus_reporting_app/features/auth/providers/auth_provider.dart';
-import 'package:campus_reporting_app/features/incidents/widgets/incident_card.dart';
-import 'package:campus_reporting_app/features/incidents/widgets/summary_card.dart';
+import 'package:campus_reporting_app/features/incidents/screens/incident_feed_screen.dart';
+import 'package:campus_reporting_app/features/incidents/widgets/incident_widget.dart';
 import 'package:campus_reporting_app/features/student/widgets/navigationbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -78,57 +78,9 @@ class StudentDashboardScreen extends ConsumerWidget {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
-          const Row(
-            children: [
-              Expanded(
-                child: SummaryCard(
-                  title: 'Total',
-                  value: '12',
-                  icon: Icons.description_outlined,
-                ),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: SummaryCard(
-                  title: 'In Progress',
-                  value: '5',
-                  icon: Icons.hourglass_top,
-                ),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: SummaryCard(
-                  title: 'Resolved',
-                  value: '4',
-                  icon: Icons.check_circle_outline,
-                ),
-              ),
-            ],
-          ),
+          const MyReportSummary(),
           const SizedBox(height: 24),
-          const Text(
-            'Recent Reports',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          IncidentTile(
-            title: 'Water shortage',
-            location: 'Student Residence - Block A',
-            status: 'Submitted',
-            onTap: () => context.go('/student/incident/INC-001'),
-          ),
-          IncidentTile(
-            title: 'Broken classroom projector',
-            location: 'Block B - Room 204',
-            status: 'In Progress',
-            onTap: () => context.go('/student/incident/INC-002'),
-          ),
-          IncidentTile(
-            title: 'Overflowing bin near cafeteria',
-            location: 'Cafeteria',
-            status: 'Resolved',
-            onTap: () => context.go('/student/incident/INC-003'),
-          ),
+          const RecentIncidentsPreview(),
         ],
       ),
       bottomNavigationBar: const StudentNavigationBar(selectedIndex: 0),
