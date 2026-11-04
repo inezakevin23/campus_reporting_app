@@ -151,8 +151,9 @@ class IncidentTile extends StatelessWidget {
 
 class IncidentCard extends StatelessWidget {
   final Incident incident;
+  final bool isStaff;
 
-  const IncidentCard({super.key, required this.incident});
+  const IncidentCard({super.key, required this.incident, this.isStaff = false});
 
   @override
   Widget build(BuildContext context) {
@@ -162,7 +163,11 @@ class IncidentCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
-          context.go('/student/incident/${incident.id}');
+          final route = isStaff
+              ? '/staff/incident/${incident.id}'
+              : '/student/incident/${incident.id}';
+
+          context.go(route);
         },
         child: Padding(
           padding: const EdgeInsets.all(12),

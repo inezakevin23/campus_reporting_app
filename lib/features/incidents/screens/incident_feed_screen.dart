@@ -151,11 +151,13 @@ class MyReportsScreen extends ConsumerWidget {
 class IncidentFilterList extends StatefulWidget {
   final List<Incident> incidents;
   final String emptyMessage;
+  final bool isStaff;
 
   const IncidentFilterList({
     super.key,
     required this.incidents,
     required this.emptyMessage,
+    this.isStaff = false,
   });
 
   @override
@@ -378,7 +380,10 @@ class _IncidentFilterListState extends State<IncidentFilterList> {
                   itemBuilder: (context, index) {
                     final incident = results[index];
 
-                    return IncidentCard(incident: incident);
+                    return IncidentCard(
+                      incident: incident,
+                      isStaff: widget.isStaff,
+                    );
                   },
                 ),
         ),
@@ -441,7 +446,7 @@ class RecentIncidentsPreview extends ConsumerWidget {
 
             return Column(
               children: recentIncidents.map((incident) {
-                return IncidentCard(incident: incident);
+                return IncidentCard(incident: incident, isStaff: false);
               }).toList(),
             );
           },

@@ -45,7 +45,7 @@ class IncidentService {
     String? uploadedImagePath;
 
     try {
-      // 1. Upload the optional image to Supabase.
+      //  Upload the optional image to Supabase.
       if (imageBytes != null) {
         if (imageExtension == null || contentType == null) {
           throw ArgumentError('Image format information is missing.');
@@ -58,11 +58,11 @@ class IncidentService {
           contentType: contentType,
         );
       }
-
-      // 2. Prepare one atomic Firestore batch.
+      final historyRef = incidentRef.collection('statusHistory').doc();
+      // Prepare one atomic Firestore batch.
       final batch = _firestore.batch();
 
-      // 3. Create the incident document.
+      // Create the incident document.
       batch.set(incidentRef, {
         'title': title.trim(),
         'description': description.trim(),
@@ -74,10 +74,8 @@ class IncidentService {
         'imagePath': uploadedImagePath,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
+        'lastStatusUpdateId': historyRef.id,
       });
-
-      // 4. Create the initial status-history document.
-      final historyRef = incidentRef.collection('statusHistory').doc();
 
       batch.set(historyRef, {
         'status': 'submitted',
@@ -86,7 +84,7 @@ class IncidentService {
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-      // 5. Save both documents together.
+      // Save both documents together.
       await batch.commit();
 
       return incidentRef.id;
@@ -169,5 +167,95 @@ class IncidentService {
             return IncidentStatusUpdate.fromMap(doc.id, doc.data());
           }).toList();
         });
+  }
+  // --------------------------------------------------
+  // UPDATE INCIDENT STATUS
+  // --------------------------------------------------
+
+  Future<void> updateIncidentStatus({
+    required String incidentId,
+    required String newStatus,
+    required String note,
+  }) async {
+    // 1. Get the authenticated user.
+    final user = _auth.currentUser;
+
+    if (user == null) {
+      throw StateError('You must log in before updating an incident.');
+    }
+
+    // 2. Validate the staff role.
+    final userDocument = await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .get();
+
+    if (!userDocument.exists || userDocument.data()?['role'] != 'staff') {
+      throw StateError('Only authorized campus staff can update incidents.');
+    }
+
+    // 3. Validate the note.
+    final trimmedNote = note.trim();
+
+    if (trimmedNote.length < 5) {
+      throw ArgumentError('Please provide a meaningful update note.');
+    }
+
+    if (trimmedNote.length > 500) {
+      throw ArgumentError('The update note cannot exceed 500 characters.');
+    }
+
+    // 4. Get the incident document.
+    final incidentRef = _firestore.collection('incidents').doc(incidentId);
+
+    final incidentDocument = await incidentRef.get();
+
+    if (!incidentDocument.exists) {
+      throw StateError('Incident not found.');
+    }
+
+    final currentStatus = incidentDocument.data()?['status'] as String?;
+
+    // 5. Determine the allowed next status.
+    final String? expectedNextStatus = switch (currentStatus) {
+      'submitted' => 'in_progress',
+      'in_progress' => 'resolved',
+      _ => null,
+    };
+
+    if (expectedNextStatus == null) {
+      throw StateError('This incident cannot receive further status updates.');
+    }
+
+    if (newStatus != expectedNextStatus) {
+      throw StateError(
+        'Invalid status transition. '
+        'The next status should be $expectedNextStatus.',
+      );
+    }
+
+    // 6. Create a new status-history document reference.
+    final historyRef = incidentRef.collection('statusHistory').doc();
+
+    // 7. Create an atomic Firestore batch.
+    final batch = _firestore.batch();
+
+    // Update the current incident.
+    batch.update(incidentRef, {
+      'status': newStatus,
+      'updatedAt': FieldValue.serverTimestamp(),
+      'lastStatusUpdateId': historyRef.id,
+    });
+
+    // Record the staff update.
+    batch.set(historyRef, {
+      'status': newStatus,
+      'note': trimmedNote,
+      'changedByUid': user.uid,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    // 8. Commit both operations together.
+    await batch.commit();
   }
 }

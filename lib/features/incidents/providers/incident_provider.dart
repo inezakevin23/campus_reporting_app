@@ -110,3 +110,43 @@ final signedImageUrlProvider = FutureProvider.autoDispose
     .family<String, String>((ref, imagePath) async {
       return ref.watch(storageServiceProvider).getSignedImageUrl(imagePath);
     });
+// STAFF INCIDENT PROVIDER
+final staffIncidentsProvider = StreamProvider<List<Incident>>((ref) {
+  return ref.watch(incidentServiceProvider).watchCampusIncidents();
+});
+
+// UPDATE INCIDENT STATUS CONTROLLER
+class UpdateIncidentStatusController extends AsyncNotifier<void> {
+  @override
+  Future<void> build() async {}
+
+  Future<void> updateStatus({
+    required String incidentId,
+    required String newStatus,
+    required String note,
+  }) async {
+    state = const AsyncLoading();
+
+    try {
+      await ref
+          .read(incidentServiceProvider)
+          .updateIncidentStatus(
+            incidentId: incidentId,
+            newStatus: newStatus,
+            note: note,
+          );
+
+      state = const AsyncData(null);
+    } catch (error, stackTrace) {
+      state = AsyncError(error, stackTrace);
+
+      rethrow;
+    }
+  }
+}
+
+// RIVERPOD PROVIDER
+final updateIncidentStatusProvider =
+    AsyncNotifierProvider<UpdateIncidentStatusController, void>(
+      UpdateIncidentStatusController.new,
+    );

@@ -18,7 +18,7 @@ class StudentDashboardScreen extends ConsumerWidget {
         actions: [
           IconButton(
             onPressed: () async {
-              await ref.read(authRepositoryProvider).signOut();
+              await ref.read(authServiceProvider).signOut();
             },
             icon: const Icon(Icons.logout),
           ),

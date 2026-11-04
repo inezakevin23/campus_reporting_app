@@ -42,7 +42,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     try {
       await ref
-          .read(authRepositoryProvider)
+          .read(authServiceProvider)
           .signIn(
             email: _emailController.text,
             password: _passwordController.text,
@@ -78,7 +78,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
 
     try {
-      await ref.read(authRepositoryProvider).resetPassword(email);
+      await ref.read(authServiceProvider).resetPassword(email);
 
       if (!mounted) return;
 

@@ -15,8 +15,8 @@ final firestoreProvider = Provider<FirebaseFirestore>((ref) {
   return FirebaseFirestore.instance;
 });
 
-// Authentication repository.
-final authRepositoryProvider = Provider<AuthService>((ref) {
+// Authentication Service.
+final authServiceProvider = Provider<AuthService>((ref) {
   return AuthService(
     auth: ref.watch(firebaseAuthProvider),
     firestore: ref.watch(firestoreProvider),
@@ -25,7 +25,7 @@ final authRepositoryProvider = Provider<AuthService>((ref) {
 
 // Observe login and logout changes.
 final authStateProvider = StreamProvider<User?>((ref) {
-  return ref.watch(authRepositoryProvider).authStateChanges;
+  return ref.watch(authServiceProvider).authStateChanges;
 });
 
 // Retrieve a user's Firestore profile.
@@ -33,7 +33,7 @@ final userProfileProvider = FutureProvider.family<UserModel?, String>((
   ref,
   uid,
 ) async {
-  final data = await ref.watch(authRepositoryProvider).getUserProfile(uid);
+  final data = await ref.watch(authServiceProvider).getUserProfile(uid);
 
   if (data == null) {
     return null;

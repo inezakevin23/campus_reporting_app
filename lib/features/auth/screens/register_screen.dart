@@ -45,7 +45,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     try {
       await ref
-          .read(authRepositoryProvider)
+          .read(authServiceProvider)
           .registerStudent(
             fullName: _nameController.text,
             email: _emailController.text,

@@ -3,6 +3,7 @@ import 'package:campus_reporting_app/features/incidents/widgets/incident_widget.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../staff/widgets/staff_incident_actions.dart';
 import '../../../core/theme/app_theme.dart';
 
 class IncidentDetailsScreen extends ConsumerWidget {
@@ -218,21 +219,11 @@ class IncidentDetailsScreen extends ConsumerWidget {
               const SizedBox(height: 24),
 
               // STAFF PLACEHOLDER
-              if (isStaff)
-                Container(
-                  padding: const EdgeInsets.all(16),
+              if (isStaff) ...[
+                const SizedBox(height: 24),
 
-                  decoration: BoxDecoration(
-                    color: AppTheme.card,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-
-                  child: const Text(
-                    'This incident is available for staff review. '
-                    'Status updating will be implemented in Phase 5.',
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                ),
+                StaffIncidentActions(incident: incident),
+              ],
             ],
           ),
         );
