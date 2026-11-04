@@ -52,3 +52,4 @@ env/dev.json
 
 # Firebase Admin service account
 serviceAccountKey.json
+admin-tools/serviceAccountKey.json

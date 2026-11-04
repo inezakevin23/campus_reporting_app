@@ -1,19 +1,23 @@
+import 'package:campus_reporting_app/features/auth/providers/auth_provider.dart';
 import 'package:campus_reporting_app/features/incidents/widgets/incident_card.dart';
 import 'package:campus_reporting_app/features/incidents/widgets/summary_card.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class StaffDashboardScreen extends StatelessWidget {
+class StaffDashboardScreen extends ConsumerWidget {
   const StaffDashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Staff Dashboard'),
         actions: [
           IconButton(
-            onPressed: () => context.go('/login'),
+            onPressed: () async {
+              await ref.read(authRepositoryProvider).signOut();
+            },
             icon: const Icon(Icons.logout),
           ),
         ],

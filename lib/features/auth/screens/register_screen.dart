@@ -16,7 +16,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _departmentController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
@@ -28,7 +27,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
-    _departmentController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
 
@@ -73,6 +71,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           _isLoading = false;
         });
       }
+    }
+  }
+
+  String _getAuthError(String code) {
+    switch (code) {
+      case 'invalid-email':
+        return 'The email address is invalid.';
+      case 'email-already-in-use':
+        return 'This email is already registered.';
+      case 'weak-password':
+        return 'Password must be stronger.';
+      case 'operation-not-allowed':
+        return 'Email/password sign-in is currently disabled.';
+      case 'too-many-requests':
+        return 'Too many attempts. Try again later.';
+      case 'network-request-failed':
+        return 'Check your internet connection.';
+      default:
+        return 'Registration failed. Please try again.';
     }
   }
 
@@ -153,16 +170,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
 
               const SizedBox(height: 16),
-
-              // Department
-              TextFormField(
-                controller: _departmentController,
-
-                decoration: const InputDecoration(
-                  labelText: 'Department (Optional)',
-                  prefixIcon: Icon(Icons.school_outlined),
-                ),
-              ),
 
               const SizedBox(height: 16),
 

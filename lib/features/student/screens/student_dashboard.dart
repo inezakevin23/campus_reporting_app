@@ -1,21 +1,25 @@
 import 'package:campus_reporting_app/core/theme/app_theme.dart';
+import 'package:campus_reporting_app/features/auth/providers/auth_provider.dart';
 import 'package:campus_reporting_app/features/incidents/widgets/incident_card.dart';
 import 'package:campus_reporting_app/features/incidents/widgets/summary_card.dart';
 import 'package:campus_reporting_app/features/student/widgets/navigationbar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class StudentDashboardScreen extends StatelessWidget {
+class StudentDashboardScreen extends ConsumerWidget {
   const StudentDashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Campus Report'),
         actions: [
           IconButton(
-            onPressed: () => context.go('/login'),
+            onPressed: () async {
+              await ref.read(authRepositoryProvider).signOut();
+            },
             icon: const Icon(Icons.logout),
           ),
         ],

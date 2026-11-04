@@ -16,8 +16,8 @@ final firestoreProvider = Provider<FirebaseFirestore>((ref) {
 });
 
 // Authentication repository.
-final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  return AuthRepository(
+final authRepositoryProvider = Provider<AuthService>((ref) {
+  return AuthService(
     auth: ref.watch(firebaseAuthProvider),
     firestore: ref.watch(firestoreProvider),
   );

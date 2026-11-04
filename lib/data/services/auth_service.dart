@@ -1,15 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class AuthRepository {
+class AuthService {
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
 
-  AuthRepository({
-    required FirebaseAuth auth,
-    required FirebaseFirestore firestore,
-  }) : _auth = auth,
-       _firestore = firestore;
+  AuthService({required this._auth, required this._firestore});
 
   // Listen to login and logout changes.
   Stream<User?> get authStateChanges => _auth.authStateChanges();
