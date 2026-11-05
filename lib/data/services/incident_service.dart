@@ -89,15 +89,10 @@ class IncidentService {
 
       return incidentRef.id;
     } catch (error) {
-      // Remove an uploaded image if the Firestore write fails.
-      if (uploadedImagePath != null) {
-        try {
-          await _storage.deleteIncidentImage(uploadedImagePath);
-        } catch (_) {
-          // Preserve the original submission error.
-        }
-      }
-
+      // The public upload policy does not allow anonymous users to delete
+      // uploaded files. An image can remain in Storage if the subsequent
+      // Firestore write fails; such orphaned images can be cleaned up
+      // administratively.
       rethrow;
     }
   }

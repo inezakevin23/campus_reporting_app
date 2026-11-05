@@ -1,7 +1,8 @@
 import 'dart:async';
 
 import 'package:campus_reporting_app/features/incidents/screens/incident_details_screen.dart';
-import 'package:campus_reporting_app/features/incidents/screens/incident_feed_screen.dart' as incident_feed;
+import 'package:campus_reporting_app/features/incidents/screens/incident_feed_screen.dart'
+    as incident_feed;
 import 'package:campus_reporting_app/features/incidents/screens/report_incident_screen.dart';
 import 'package:campus_reporting_app/features/staff/screens/staff_dashboard.dart';
 import 'package:campus_reporting_app/features/student/screens/my_report.dart';
@@ -66,7 +67,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           .doc(user.uid)
           .get();
 
+      final createdAt = user.metadata.creationTime;
+      final isFreshAccount =
+          createdAt != null &&
+          DateTime.now().difference(createdAt).inSeconds < 15;
+
       if (!userDocument.exists) {
+        if (isFreshAccount || location == '/login' || location == '/register') {
+          return null;
+        }
+
         return '/account-error';
       }
 

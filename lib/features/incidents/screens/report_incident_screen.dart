@@ -149,25 +149,23 @@ class _CreateIncidentScreenState extends ConsumerState<CreateIncidentScreen> {
     });
 
     try {
-      final incidentId = await ref
-          .read(createIncidentProvider.notifier)
-          .submit(
-            title: _titleController.text,
-            description: _descriptionController.text,
-            category: _category,
-            location: _locationController.text,
-            priority: _priority,
-            imageBytes: _imageBytes,
-            imageExtension: _imageExtension,
-            contentType: _contentType,
-          );
+      await ref.read(createIncidentProvider.notifier).submit(
+        title: _titleController.text,
+        description: _descriptionController.text,
+        category: _category,
+        location: _locationController.text,
+        priority: _priority,
+        imageBytes: _imageBytes,
+        imageExtension: _imageExtension,
+        contentType: _contentType,
+      );
 
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Incident submitted successfully. ID: $incidentId'),
-          duration: const Duration(seconds: 4),
+        const SnackBar(
+          content: Text('Incident submitted successfully.'),
+          duration: Duration(seconds: 4),
         ),
       );
 

@@ -18,10 +18,7 @@ final supabaseClientProvider = Provider<SupabaseClient>((ref) {
 
 // Storage Service.
 final storageServiceProvider = Provider<StorageService>((ref) {
-  return StorageService(
-    supabase: ref.watch(supabaseClientProvider),
-    auth: FirebaseAuth.instance,
-  );
+  return StorageService(supabase: ref.watch(supabaseClientProvider));
 });
 
 // Incident Service.
@@ -106,10 +103,13 @@ final incidentHistoryProvider =
       return ref.watch(incidentServiceProvider).watchStatusHistory(incidentId);
     });
 
-final signedImageUrlProvider = FutureProvider.autoDispose
-    .family<String, String>((ref, imagePath) async {
-      return ref.watch(storageServiceProvider).getSignedImageUrl(imagePath);
-    });
+final publicImageUrlProvider = Provider.family<String, String>((
+  ref,
+  imagePath,
+) {
+  return ref.watch(storageServiceProvider).getPublicImageUrl(imagePath);
+});
+
 // STAFF INCIDENT PROVIDER
 final staffIncidentsProvider = StreamProvider<List<Incident>>((ref) {
   return ref.watch(incidentServiceProvider).watchCampusIncidents();

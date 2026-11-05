@@ -116,39 +116,6 @@ class IncidentStatusChip extends StatelessWidget {
   }
 }
 
-class IncidentTile extends StatelessWidget {
-  final String title;
-  final String location;
-  final String status;
-  final VoidCallback onTap;
-
-  const IncidentTile({
-    super.key,
-    required this.title,
-    required this.location,
-    required this.status,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      color: AppTheme.card,
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        onTap: onTap,
-        leading: const CircleAvatar(
-          backgroundColor: AppTheme.navy,
-          child: Icon(Icons.report_problem_outlined, color: AppTheme.yellow),
-        ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(location),
-        trailing: StatusChip(status: status),
-      ),
-    );
-  }
-}
-
 class IncidentCard extends StatelessWidget {
   final Incident incident;
   final bool isStaff;
@@ -179,7 +146,7 @@ class IncidentCard extends StatelessWidget {
                   child: SizedBox(
                     width: 60,
                     height: 60,
-                    child: PrivateIncidentImage(imagePath: incident.imagePath!),
+                    child: PublicIncidentImage(imagePath: incident.imagePath!),
                   ),
                 )
               else
@@ -244,46 +211,32 @@ class IncidentCard extends StatelessWidget {
   }
 }
 
-class PrivateIncidentImage extends ConsumerWidget {
+class PublicIncidentImage extends ConsumerWidget {
   final String imagePath;
 
-  const PrivateIncidentImage({super.key, required this.imagePath});
+  const PublicIncidentImage({super.key, required this.imagePath});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final imageUrlAsync = ref.watch(signedImageUrlProvider(imagePath));
+    final imageUrl = ref.watch(publicImageUrlProvider(imagePath));
 
-    return imageUrlAsync.when(
-      loading: () {
-        return Container(
-          color: AppTheme.card,
-          alignment: Alignment.center,
-          child: const CircularProgressIndicator(strokeWidth: 2),
-        );
+    return Image.network(
+      imageUrl,
+      fit: BoxFit.cover,
+      width: double.infinity,
+      height: double.infinity,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) {
+          return child;
+        }
+
+        return const Center(child: CircularProgressIndicator(strokeWidth: 2));
       },
-      error: (error, stackTrace) {
+      errorBuilder: (context, error, stackTrace) {
         return Container(
           color: AppTheme.card,
           alignment: Alignment.center,
           child: const Icon(Icons.broken_image_outlined, color: Colors.white54),
-        );
-      },
-      data: (imageUrl) {
-        return Image.network(
-          imageUrl,
-          fit: BoxFit.cover,
-          width: double.infinity,
-          height: double.infinity,
-          errorBuilder: (context, error, stackTrace) {
-            return Container(
-              color: AppTheme.card,
-              alignment: Alignment.center,
-              child: const Icon(
-                Icons.broken_image_outlined,
-                color: Colors.white54,
-              ),
-            );
-          },
         );
       },
     );

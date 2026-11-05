@@ -1,37 +1,13 @@
-import 'dart:typed_data';
-
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' hide User;
+import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class StorageService {
   final SupabaseClient _supabase;
-  final FirebaseAuth _auth;
 
-  static const String bucketName = 'incident-photos';
+  static const String bucketName = 'incident_photos';
   static const int maxFileSize = 5 * 1024 * 1024;
 
-  StorageService({required this._supabase, required this._auth});
-
-  // Verify that the Firebase account has the
-  // custom claim required by Supabase.
-  Future<User> _getAuthorizedUser() async {
-    final user = _auth.currentUser;
-
-    if (user == null) {
-      throw StateError('You must be logged in to upload photographs.');
-    }
-
-    final tokenResult = await user.getIdTokenResult(true);
-
-    if (tokenResult.claims?['role'] != 'authenticated') {
-      throw StateError(
-        'Your account is not configured for Supabase Storage. '
-        'Please contact the administrator.',
-      );
-    }
-
-    return user;
-  }
+  StorageService({required this._supabase});
 
   // Upload an incident photograph.
   Future<String> uploadIncidentImage({
@@ -40,8 +16,6 @@ class StorageService {
     required String extension,
     required String contentType,
   }) async {
-    final user = await _getAuthorizedUser();
-
     if (bytes.isEmpty) {
       throw ArgumentError('The selected image is empty.');
     }
@@ -67,35 +41,59 @@ class StorageService {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
 
     final filePath =
-        '${user.uid}/$incidentId/photo_$timestamp.$normalizedExtension';
+        'incidents/$incidentId/photo_$timestamp.$normalizedExtension';
 
-    await _supabase.storage
-        .from(bucketName)
-        .uploadBinary(
-          filePath,
-          bytes,
-          fileOptions: FileOptions(
-            contentType: normalizedContentType,
-            upsert: false,
-          ),
-        );
+    // await _supabase.storage
+    //     .from(bucketName)
+    //     .uploadBinary(
+    //       filePath,
+    //       bytes,
+    //       fileOptions: FileOptions(
+    //         contentType: normalizedContentType,
+    //         upsert: false,
+    //       ),
+    //     );
+    try {
+      debugPrint('========== SUPABASE UPLOAD ==========');
+
+      debugPrint('Bucket: $bucketName');
+      debugPrint('File path: $filePath');
+      debugPrint('Extension: $normalizedExtension');
+      debugPrint('Content type: $normalizedContentType');
+      debugPrint('File size: ${bytes.length} bytes');
+
+      await _supabase.storage
+          .from(bucketName)
+          .uploadBinary(
+            filePath,
+            bytes,
+            fileOptions: FileOptions(
+              contentType: normalizedContentType,
+              upsert: false,
+            ),
+          );
+
+      debugPrint('IMAGE UPLOAD SUCCESSFUL');
+    } catch (error, stackTrace) {
+      debugPrint('========== SUPABASE UPLOAD FAILED ==========');
+      debugPrint('Error details: $error');
+      debugPrint('Stack trace: $stackTrace');
+
+      rethrow;
+    }
 
     return filePath;
   }
 
-  // Generate a temporary URL for displaying a private image.
-  Future<String> getSignedImageUrl(String imagePath) async {
-    await _getAuthorizedUser();
-
-    return await _supabase.storage
-        .from(bucketName)
-        .createSignedUrl(imagePath, 3600);
+  String getPublicImageUrl(String imagePath) {
+    return _supabase.storage.from(bucketName).getPublicUrl(imagePath);
   }
 
-  // Delete an uploaded image.
-  Future<void> deleteIncidentImage(String imagePath) async {
-    await _getAuthorizedUser();
+  Future<String> getSignedImageUrl(String imagePath) async {
+    return getPublicImageUrl(imagePath);
+  }
 
+  Future<void> deleteIncidentImage(String imagePath) async {
     await _supabase.storage.from(bucketName).remove([imagePath]);
   }
 }

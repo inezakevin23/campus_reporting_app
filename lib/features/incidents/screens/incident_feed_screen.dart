@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../data/models/incident_model.dart';
+import '../../student/widgets/navigationbar.dart';
 import '../providers/incident_provider.dart';
 import '../widgets/incident_widget.dart';
 
@@ -18,7 +19,16 @@ class IncidentFeedScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Campus Incidents'),
-
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/student');
+            }
+          },
+        ),
         actions: [
           IconButton(
             onPressed: () {
@@ -28,7 +38,7 @@ class IncidentFeedScreen extends ConsumerWidget {
           ),
         ],
       ),
-
+      bottomNavigationBar: const StudentNavigationBar(selectedIndex: 2),
       body: incidentsAsync.when(
         loading: () {
           return const Center(child: CircularProgressIndicator());

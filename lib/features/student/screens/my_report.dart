@@ -15,16 +15,26 @@ class MyReportsScreen extends ConsumerWidget {
 
     if (currentUser == null) {
       return const Scaffold(
-        body: Center(
-          child: Text('Please log in to view your reports.'),
-        ),
+        body: Center(child: Text('Please log in to view your reports.')),
       );
     }
 
     final reportsAsync = ref.watch(myReportsProvider(currentUser.uid));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('My Reports')),
+      appBar: AppBar(
+        title: const Text('My Reports'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/student');
+            }
+          },
+        ),
+      ),
       body: reportsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) => Center(
@@ -33,7 +43,11 @@ class MyReportsScreen extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.error_outline, size: 45, color: Colors.redAccent),
+                const Icon(
+                  Icons.error_outline,
+                  size: 45,
+                  color: Colors.redAccent,
+                ),
                 const SizedBox(height: 12),
                 const Text('Unable to load your reports.'),
               ],
@@ -59,11 +73,9 @@ class MyReportsScreen extends ConsumerWidget {
             itemBuilder: (context, index) {
               final incident = reports[index];
 
-              return IncidentTile(
-                title: incident.title,
-                location: incident.location,
-                status: incident.status,
-                onTap: () => context.go('/student/incident/${incident.id}'),
+              return IncidentCard(
+                incident: incident,
+                isStaff: false,
               );
             },
           );

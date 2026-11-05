@@ -115,7 +115,7 @@ class IncidentDetailsScreen extends ConsumerWidget {
                     width: double.infinity,
                     height: 220,
 
-                    child: PrivateIncidentImage(imagePath: incident.imagePath!),
+                    child: PublicIncidentImage(imagePath: incident.imagePath!),
                   ),
                 )
               else
@@ -150,13 +150,6 @@ class IncidentDetailsScreen extends ConsumerWidget {
               Row(
                 children: [
                   IncidentStatusChip(status: incident.status),
-
-                  const SizedBox(width: 8),
-
-                  Text(
-                    'ID: ${incident.id}',
-                    style: const TextStyle(fontSize: 11, color: Colors.white54),
-                  ),
                 ],
               ),
 

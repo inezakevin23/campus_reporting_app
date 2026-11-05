@@ -1,8 +1,7 @@
 import 'package:campus_reporting_app/core/routing/app_router.dart';
 import 'package:campus_reporting_app/core/theme/app_theme.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -14,7 +13,7 @@ Future<void> main() async {
   // 1. Wait for Firebase initialization
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // 2. Initialize Supabase using the Firebase user's ID token.
+  // 2. Initialize Supabase using its publishable client key.
   const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
   const supabaseKey = String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY');
 
@@ -25,19 +24,7 @@ Future<void> main() async {
     );
   }
 
-  await Supabase.initialize(
-    url: supabaseUrl,
-    publishableKey: supabaseKey,
-    accessToken: () async {
-      final user = FirebaseAuth.instance.currentUser;
-
-      if (user == null) {
-        return null;
-      }
-
-      return await user.getIdToken();
-    },
-  );
+  await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseKey);
 
   runApp(const ProviderScope(child: CampusReportApp()));
 }

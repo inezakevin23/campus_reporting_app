@@ -20,16 +20,14 @@ class StudentDashboardScreen extends ConsumerWidget {
         : ref.watch(userProfileProvider(currentUser.uid));
 
     final displayName = profileAsync.maybeWhen(
-      data: (profile) =>
-          profile?.fullName.trim().isNotEmpty == true
-              ? profile!.fullName
-              : currentUser?.displayName?.trim().isNotEmpty == true
-                  ? currentUser!.displayName!
-                  : 'Student',
-      orElse: () =>
-          currentUser?.displayName?.trim().isNotEmpty == true
-              ? currentUser!.displayName!
-              : 'Student',
+      data: (profile) => profile?.fullName.trim().isNotEmpty == true
+          ? profile!.fullName
+          : currentUser?.displayName?.trim().isNotEmpty == true
+          ? currentUser!.displayName!
+          : 'Student',
+      orElse: () => currentUser?.displayName?.trim().isNotEmpty == true
+          ? currentUser!.displayName!
+          : 'Student',
     );
 
     return Scaffold(
@@ -48,7 +46,7 @@ class StudentDashboardScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         children: [
           Text(
-            'Hello, $displayName 👋',
+            'Hello, $displayName!',
             style: const TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 6),

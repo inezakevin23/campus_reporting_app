@@ -107,7 +107,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
             children: [
               const Text(
-                'Join CampusAlert',
+                'Join CampusReport',
                 style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
               ),
 
