@@ -7,15 +7,23 @@ admin.initializeApp({
 });
 
 async function setSupabaseClaim() {
+
   let nextPageToken;
 
+  let updatedCount = 0;
+
   do {
+
     const result = await admin.auth().listUsers(
       1000,
       nextPageToken
     );
 
+    nextPageToken = result.pageToken;
+
     for (const user of result.users) {
+
+      
       const existingClaims = user.customClaims || {};
 
       await admin.auth().setCustomUserClaims(
@@ -26,19 +34,25 @@ async function setSupabaseClaim() {
         }
       );
 
-      console.log(`Updated claims for ${user.uid}`);
-    }
+      console.log(
+        `Enabled Supabase access for: ${user.email}`
+      );
 
-    nextPageToken = result.pageToken;
+      updatedCount++;
+    }
 
   } while (nextPageToken);
 
-  console.log("Finished assigning Supabase claims.");
-
-  await admin.app().delete();
+  console.log(
+    `Successfully updated ${updatedCount} Firebase accounts.`
+  );
 }
 
-setSupabaseClaim().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+setSupabaseClaim()
+  .then(() => {
+    return admin.app().delete();
+  })
+  .catch((error) => {
+    console.error("Failed to update claims:", error);
+    process.exitCode = 1;
+  });
