@@ -1,8 +1,10 @@
 import 'package:campus_reporting_app/core/theme/app_theme.dart';
+import 'package:campus_reporting_app/data/models/user_model.dart';
 import 'package:campus_reporting_app/features/auth/providers/auth_provider.dart';
 import 'package:campus_reporting_app/features/incidents/screens/incident_feed_screen.dart';
 import 'package:campus_reporting_app/features/incidents/widgets/incident_widget.dart';
 import 'package:campus_reporting_app/features/student/widgets/navigationbar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -12,6 +14,24 @@ class StudentDashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final profileAsync = currentUser == null
+        ? const AsyncValue<UserModel?>.data(null)
+        : ref.watch(userProfileProvider(currentUser.uid));
+
+    final displayName = profileAsync.maybeWhen(
+      data: (profile) =>
+          profile?.fullName.trim().isNotEmpty == true
+              ? profile!.fullName
+              : currentUser?.displayName?.trim().isNotEmpty == true
+                  ? currentUser!.displayName!
+                  : 'Student',
+      orElse: () =>
+          currentUser?.displayName?.trim().isNotEmpty == true
+              ? currentUser!.displayName!
+              : 'Student',
+    );
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Campus Report'),
@@ -27,9 +47,9 @@ class StudentDashboardScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text(
-            'Hello, Alex Moyo 👋',
-            style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
+          Text(
+            'Hello, $displayName 👋',
+            style: const TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 6),
           const Text(

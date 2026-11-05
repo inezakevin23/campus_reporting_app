@@ -2,6 +2,7 @@ import 'package:campus_reporting_app/features/incidents/providers/incident_provi
 import 'package:campus_reporting_app/features/incidents/widgets/incident_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../staff/widgets/staff_incident_actions.dart';
 import '../../../core/theme/app_theme.dart';
@@ -31,8 +32,21 @@ class IncidentDetailsScreen extends ConsumerWidget {
       // ERROR
       error: (error, stackTrace) {
         return Scaffold(
-          appBar: AppBar(title: const Text('Incident Details')),
-
+          appBar: AppBar(
+            title: const Text('Incident Details'),
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else if (isStaff) {
+                  context.go('/staff');
+                } else {
+                  context.go('/student');
+                }
+              },
+            ),
+          ),
           body: const Center(
             child: Padding(
               padding: EdgeInsets.all(24),
@@ -51,8 +65,21 @@ class IncidentDetailsScreen extends ConsumerWidget {
       data: (incident) {
         if (incident == null) {
           return Scaffold(
-            appBar: AppBar(title: const Text('Incident Details')),
-
+            appBar: AppBar(
+              title: const Text('Incident Details'),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else if (isStaff) {
+                    context.go('/staff');
+                  } else {
+                    context.go('/student');
+                  }
+                },
+              ),
+            ),
             body: const EmptyIncidentsWidget(
               message: 'This incident could not be found.',
             ),
@@ -60,8 +87,21 @@ class IncidentDetailsScreen extends ConsumerWidget {
         }
 
         return Scaffold(
-          appBar: AppBar(title: const Text('Incident Details')),
-
+          appBar: AppBar(
+            title: const Text('Incident Details'),
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else if (isStaff) {
+                  context.go('/staff');
+                } else {
+                  context.go('/student');
+                }
+              },
+            ),
+          ),
           body: ListView(
             padding: const EdgeInsets.all(16),
 

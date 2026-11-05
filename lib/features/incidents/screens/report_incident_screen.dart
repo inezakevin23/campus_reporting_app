@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:campus_reporting_app/features/incidents/providers/incident_provider.dart';
+import 'package:campus_reporting_app/features/student/widgets/navigationbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -208,8 +209,20 @@ class _CreateIncidentScreenState extends ConsumerState<CreateIncidentScreen> {
     final isSubmitting = ref.watch(createIncidentProvider).isLoading;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Report an Issue')),
-
+      appBar: AppBar(
+        title: const Text('Report an Issue'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/student');
+            }
+          },
+        ),
+      ),
+      bottomNavigationBar: const StudentNavigationBar(selectedIndex: 3),
       body: SafeArea(
         child: Form(
           key: _formKey,

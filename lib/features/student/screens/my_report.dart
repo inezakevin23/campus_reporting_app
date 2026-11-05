@@ -1,51 +1,74 @@
+import 'package:campus_reporting_app/features/incidents/providers/incident_provider.dart';
 import 'package:campus_reporting_app/features/incidents/widgets/incident_widget.dart';
 import 'package:campus_reporting_app/features/student/widgets/navigationbar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class MyReportsScreen extends StatelessWidget {
+class MyReportsScreen extends ConsumerWidget {
   const MyReportsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser == null) {
+      return const Scaffold(
+        body: Center(
+          child: Text('Please log in to view your reports.'),
+        ),
+      );
+    }
+
+    final reportsAsync = ref.watch(myReportsProvider(currentUser.uid));
+
     return Scaffold(
       appBar: AppBar(title: const Text('My Reports')),
-
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const TextField(
-            decoration: InputDecoration(
-              hintText: 'Search reports...',
-              prefixIcon: Icon(Icons.search),
+      body: reportsAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stackTrace) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.error_outline, size: 45, color: Colors.redAccent),
+                const SizedBox(height: 12),
+                const Text('Unable to load your reports.'),
+              ],
             ),
           ),
+        ),
+        data: (reports) {
+          if (reports.isEmpty) {
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Text(
+                  'You have not submitted any reports yet.',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
+          }
 
-          const SizedBox(height: 20),
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: reports.length,
+            itemBuilder: (context, index) {
+              final incident = reports[index];
 
-          IncidentTile(
-            title: 'Water shortage',
-            location: 'Student Residence - Block A',
-            status: 'Submitted',
-            onTap: () => context.go('/student/incident/INC-001'),
-          ),
-
-          IncidentTile(
-            title: 'Broken classroom projector',
-            location: 'Block B - Room 204',
-            status: 'In Progress',
-            onTap: () => context.go('/student/incident/INC-002'),
-          ),
-
-          IncidentTile(
-            title: 'Overflowing bin',
-            location: 'Cafeteria',
-            status: 'Resolved',
-            onTap: () => context.go('/student/incident/INC-003'),
-          ),
-        ],
+              return IncidentTile(
+                title: incident.title,
+                location: incident.location,
+                status: incident.status,
+                onTap: () => context.go('/student/incident/${incident.id}'),
+              );
+            },
+          );
+        },
       ),
-
       bottomNavigationBar: const StudentNavigationBar(selectedIndex: 1),
     );
   }

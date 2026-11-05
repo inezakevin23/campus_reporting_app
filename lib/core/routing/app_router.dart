@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:campus_reporting_app/features/incidents/screens/incident_details_screen.dart';
+import 'package:campus_reporting_app/features/incidents/screens/incident_feed_screen.dart' as incident_feed;
 import 'package:campus_reporting_app/features/incidents/screens/report_incident_screen.dart';
 import 'package:campus_reporting_app/features/staff/screens/staff_dashboard.dart';
 import 'package:campus_reporting_app/features/student/screens/my_report.dart';
@@ -128,6 +129,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/student/report',
         builder: (context, state) => const CreateIncidentScreen(),
+      ),
+
+      GoRoute(
+        path: '/student/feed',
+        builder: (context, state) => const incident_feed.IncidentFeedScreen(),
       ),
 
       GoRoute(
