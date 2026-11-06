@@ -13,6 +13,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
+import '../../features/auth/screens/verify_email_screen.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -37,7 +38,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final auth = FirebaseAuth.instance;
   final firestore = FirebaseFirestore.instance;
 
-  final refreshListenable = GoRouterRefreshStream(auth.authStateChanges());
+  final refreshListenable = GoRouterRefreshStream(auth.userChanges());
 
   final router = GoRouter(
     initialLocation: '/login',
@@ -49,16 +50,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final location = state.matchedLocation;
 
       final isAuthPage = location == '/login' || location == '/register';
+      final isVerificationPage = location == '/verify-email';
 
       // 1. User is not logged in.
       if (user == null) {
         return isAuthPage ? null : '/login';
       }
 
-      // 2. An authenticated user with a broken
-      // or missing profile needs attention.
+      // 2. Allow the verification page for an unverified user.
       if (location == '/account-error') {
         return null;
+      }
+
+      if (!user.emailVerified) {
+        if (isVerificationPage || isAuthPage) {
+          return null;
+        }
+
+        return '/verify-email';
       }
 
       // 3. Retrieve the user's role from Firestore.
@@ -86,8 +95,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return '/account-error';
       }
 
-      // 4. Redirect from login/register to
-      // the appropriate dashboard.
+      // 4. Redirect from login/register to the appropriate dashboard.
       if (isAuthPage || location == '/') {
         return role == 'staff' ? '/staff' : '/student';
       }
@@ -113,6 +121,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
+      ),
+
+      GoRoute(
+        path: '/verify-email',
+        builder: (context, state) => const VerifyEmailScreen(),
       ),
 
       GoRoute(

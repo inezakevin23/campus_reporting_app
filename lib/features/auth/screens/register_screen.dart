@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:campus_reporting_app/core/utils/validators.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -54,9 +55,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
       if (!mounted) return;
 
-      // The Firestore profile has now been created.
-      // Navigate after registration is complete.
-      context.go('/student');
+      // Verification email is sent during registration, so the user must confirm their identity.
+      context.go('/verify-email');
     } on FirebaseAuthException catch (e) {
       setState(() {
         _errorMessage = _getAuthError(e.code);
@@ -155,18 +155,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   prefixIcon: Icon(Icons.email_outlined),
                 ),
 
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Email is required';
-                  }
-
-                  if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
-                      .hasMatch(value.trim())) {
-                    return 'Enter a valid email address';
-                  }
-
-                  return null;
-                },
+                validator: (value) => validateAluEmail(value),
               ),
 
               const SizedBox(height: 16),

@@ -147,11 +147,7 @@ class IncidentDetailsScreen extends ConsumerWidget {
 
               const SizedBox(height: 12),
 
-              Row(
-                children: [
-                  IncidentStatusChip(status: incident.status),
-                ],
-              ),
+              Row(children: [IncidentStatusChip(status: incident.status)]),
 
               const SizedBox(height: 24),
 

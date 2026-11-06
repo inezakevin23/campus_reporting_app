@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:campus_reporting_app/core/utils/validators.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -48,7 +49,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             password: _passwordController.text,
           );
 
-      // GoRouter listens to Firebase authStateChanges.
+      // GoRouter listens to Firebase userChanges.
       // It will redirect the user automatically.
     } on FirebaseAuthException catch (e) {
       setState(() {
@@ -70,9 +71,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _forgotPassword() async {
     final email = _emailController.text.trim();
 
-    if (email.isEmpty) {
+    final emailValidationError = validateAluEmail(email);
+    if (emailValidationError != null) {
       setState(() {
-        _errorMessage = 'Enter your email address first.';
+        _errorMessage = emailValidationError;
       });
       return;
     }
@@ -146,15 +148,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
 
                     validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Email is required';
-                      }
-
-                      if (!value.contains('@')) {
-                        return 'Enter a valid email';
-                      }
-
-                      return null;
+                      return validateAluEmail(value);
                     },
                   ),
 

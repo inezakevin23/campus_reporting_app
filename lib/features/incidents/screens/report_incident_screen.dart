@@ -149,16 +149,18 @@ class _CreateIncidentScreenState extends ConsumerState<CreateIncidentScreen> {
     });
 
     try {
-      await ref.read(createIncidentProvider.notifier).submit(
-        title: _titleController.text,
-        description: _descriptionController.text,
-        category: _category,
-        location: _locationController.text,
-        priority: _priority,
-        imageBytes: _imageBytes,
-        imageExtension: _imageExtension,
-        contentType: _contentType,
-      );
+      await ref
+          .read(createIncidentProvider.notifier)
+          .submit(
+            title: _titleController.text,
+            description: _descriptionController.text,
+            category: _category,
+            location: _locationController.text,
+            priority: _priority,
+            imageBytes: _imageBytes,
+            imageExtension: _imageExtension,
+            contentType: _contentType,
+          );
 
       if (!mounted) return;
 

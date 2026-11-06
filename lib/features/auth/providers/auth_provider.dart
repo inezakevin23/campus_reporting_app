@@ -23,9 +23,9 @@ final authServiceProvider = Provider<AuthService>((ref) {
   );
 });
 
-// Observe login and logout changes.
+// Observe login/logout and verification state changes.
 final authStateProvider = StreamProvider<User?>((ref) {
-  return ref.watch(authServiceProvider).authStateChanges;
+  return ref.watch(authServiceProvider).userChanges;
 });
 
 // Retrieve a user's Firestore profile.

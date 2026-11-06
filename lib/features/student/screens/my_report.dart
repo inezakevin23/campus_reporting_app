@@ -73,10 +73,7 @@ class MyReportsScreen extends ConsumerWidget {
             itemBuilder: (context, index) {
               final incident = reports[index];
 
-              return IncidentCard(
-                incident: incident,
-                isStaff: false,
-              );
+              return IncidentCard(incident: incident, isStaff: false);
             },
           );
         },

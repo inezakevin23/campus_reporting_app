@@ -1,0 +1,156 @@
+﻿rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    # ALU-only authentication helpers.
+    function hasAluEmail() {
+      return request.auth != null
+        && request.auth.token.email is string
+        && request.auth.token.email.matches(
+          '^[A-Za-z0-9._%+-]+@(alueducation\\.com|alustudent\\.com|aluestudent\\.com)$'
+        );
+    }
+
+    function isVerifiedAluUser() {
+      return hasAluEmail() && request.auth.token.email_verified == true;
+    }
+
+    function hasUserProfile() {
+      return isVerifiedAluUser()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function isStudent() {
+      return hasUserProfile()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'student';
+    }
+
+    function isStaff() {
+      return hasUserProfile()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'staff';
+    }
+
+    function validNextStatus(currentStatus, nextStatus) {
+      return (currentStatus == 'submitted' && nextStatus == 'in_progress')
+        || (currentStatus == 'in_progress' && nextStatus == 'resolved');
+    }
+
+    match /users/{userId} {
+      allow create: if hasAluEmail()
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasAll(['fullName', 'email', 'role', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['fullName', 'email', 'role', 'createdAt'])
+        && request.resource.data.role == 'student'
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.fullName is string;
+
+      allow read: if hasAluEmail() && request.auth.uid == userId;
+
+      allow update: if hasAluEmail()
+        && request.auth.uid == userId
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fullName']);
+
+      allow delete: if false;
+    }
+
+    match /incidents/{incidentId} {
+      allow read: if hasUserProfile();
+
+      allow create: if isStudent()
+        && request.resource.data.keys().hasAll([
+          'title',
+          'description',
+          'category',
+          'location',
+          'priority',
+          'status',
+          'reporterId',
+          'imagePath',
+          'createdAt',
+          'updatedAt',
+          'lastStatusUpdateId'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'title',
+          'description',
+          'category',
+          'location',
+          'priority',
+          'status',
+          'reporterId',
+          'imagePath',
+          'createdAt',
+          'updatedAt',
+          'lastStatusUpdateId'
+        ])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 3
+        && request.resource.data.title.size() <= 80
+        && request.resource.data.description is string
+        && request.resource.data.description.size() >= 10
+        && request.resource.data.description.size() <= 1000
+        && request.resource.data.category in ['facilities', 'water', 'electricity', 'safety', 'sanitation', 'furniture']
+        && request.resource.data.location is string
+        && request.resource.data.location.size() >= 3
+        && request.resource.data.location.size() <= 120
+        && request.resource.data.priority in ['low', 'medium', 'high']
+        && request.resource.data.status == 'submitted'
+        && request.resource.data.reporterId == request.auth.uid
+        && request.resource.data.lastStatusUpdateId is string
+        && (request.resource.data.imagePath == null || (
+          request.resource.data.imagePath is string
+          && request.resource.data.imagePath.matches('^incidents/' + incidentId + '/.*$')
+        ));
+
+      allow update: if isStaff()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt', 'lastStatusUpdateId'])
+        && validNextStatus(resource.data.status, request.resource.data.status)
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.lastStatusUpdateId is string
+        && existsAfter(/databases/$(database)/documents/incidents/$(incidentId)/statusHistory/$(request.resource.data.lastStatusUpdateId))
+        && getAfter(/databases/$(database)/documents/incidents/$(incidentId)/statusHistory/$(request.resource.data.lastStatusUpdateId)).data.status == request.resource.data.status
+        && getAfter(/databases/$(database)/documents/incidents/$(incidentId)/statusHistory/$(request.resource.data.lastStatusUpdateId)).data.changedByUid == request.auth.uid;
+
+      allow delete: if false;
+
+      match /statusHistory/{historyId} {
+        allow read: if hasUserProfile();
+
+        allow create: if request.resource.data.keys().hasAll(['status', 'note', 'changedByUid', 'createdAt'])
+          && request.resource.data.keys().hasOnly(['status', 'note', 'changedByUid', 'createdAt'])
+          && request.resource.data.note is string
+          && request.resource.data.note.size() >= 5
+          && request.resource.data.note.size() <= 500
+          && request.resource.data.createdAt == request.time
+          && (
+            (
+              isStudent()
+              && request.resource.data.status == 'submitted'
+              && request.resource.data.changedByUid == request.auth.uid
+              && !exists(/databases/$(database)/documents/incidents/$(incidentId))
+              && getAfter(/databases/$(database)/documents/incidents/$(incidentId)).data.reporterId == request.auth.uid
+              && getAfter(/databases/$(database)/documents/incidents/$(incidentId)).data.status == 'submitted'
+              && getAfter(/databases/$(database)/documents/incidents/$(incidentId)).data.lastStatusUpdateId == historyId
+            )
+            || (
+              isStaff()
+              && exists(/databases/$(database)/documents/incidents/$(incidentId))
+              && request.resource.data.changedByUid == request.auth.uid
+              && validNextStatus(
+                get(/databases/$(database)/documents/incidents/$(incidentId)).data.status,
+                request.resource.data.status
+              )
+              && getAfter(/databases/$(database)/documents/incidents/$(incidentId)).data.status == request.resource.data.status
+              && getAfter(/databases/$(database)/documents/incidents/$(incidentId)).data.lastStatusUpdateId == historyId
+            )
+          );
+
+        allow update: if false;
+        allow delete: if false;
+      }
+    }
+  }
+}
